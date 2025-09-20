@@ -29,9 +29,14 @@ export class RouteHistoryService {
     if (typeof event.url !== 'string') return;
 
     if (this.currentUrl && !this.backing) {
+      console.log('Navegando para:', this.currentUrl);
+      if (this.currentUrl === '/') {
+        this.historyStack = [this.currentUrl];
+        this.saveHistory();
+      }
       if (this.isForbiddenRoute(this.currentUrl)) {
         console.log('Rota bloqueada para histórico:', this.currentUrl);
-        this.clear();
+        this.resetHistory();
         this.logHistory();
       } else if (!this.historyStack.includes(this.currentUrl)) {
         console.log('Pushing:', this.currentUrl);
@@ -90,8 +95,8 @@ export class RouteHistoryService {
   /**
    * Limpa o histórico de rotas.
    */
-  clear(): void {
-    this.historyStack = [];
+  resetHistory(): void {
+    this.clearHistory()
     this.saveHistory();
     this.currentUrl = this.router.url;
     this.backing = false;
@@ -133,6 +138,19 @@ export class RouteHistoryService {
     } catch (e) {
       console.error('Erro ao carregar histórico do localStorage:', e);
       this.historyStack = [];
+    }
+  }
+
+    /**
+   * Remove o histórico salvo no localStorage
+   */
+  clearHistory(): void {
+    try {
+      localStorage.removeItem('routeHistoryStack');
+      this.historyStack = [];
+      console.log('Histórico removido do localStorage.');
+    } catch (e: any) {
+      console.error('Erro ao remover histórico do localStorage:', e);
     }
   }
 
