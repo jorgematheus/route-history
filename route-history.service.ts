@@ -19,6 +19,7 @@ export class RouteHistoryService {
         next: (event: any) => this.handleNavigation(event),
         error: (err) => console.error('Erro no observable de eventos do router:', err)
       });
+    this.loadHistory();
   }
 
   /**
@@ -35,6 +36,7 @@ export class RouteHistoryService {
       } else if (!this.historyStack.includes(this.currentUrl)) {
         console.log('Pushing:', this.currentUrl);
         this.historyStack.push(this.currentUrl);
+        this.saveHistory();
         this.logHistory();
       } else {
         console.log('Rota já existe na pilha, não adicionando:', this.currentUrl);
@@ -68,6 +70,7 @@ export class RouteHistoryService {
       return;
     }
     const lastUrl = this.historyStack.pop();
+    this.saveHistory();
     if (!lastUrl || typeof lastUrl !== 'string') {
       console.warn('URL inválida no histórico:', lastUrl);
       return;
@@ -89,6 +92,7 @@ export class RouteHistoryService {
    */
   clear(): void {
     this.historyStack = [];
+    this.saveHistory();
     this.currentUrl = this.router.url;
     this.backing = false;
   }
@@ -101,6 +105,35 @@ export class RouteHistoryService {
    */
   getHistory(): string[] {
     return Array.isArray(this.historyStack) ? [...this.historyStack] : [];
+  }
+
+  /**
+   * Salva o histórico no localStorage
+   */
+  private saveHistory(): void {
+    try {
+      localStorage.setItem('routeHistoryStack', JSON.stringify(this.historyStack));
+    } catch (e) {
+      console.error('Erro ao salvar histórico no localStorage:', e);
+    }
+  }
+
+  /**
+   * Carrega o histórico do localStorage
+   */
+  private loadHistory(): void {
+    try {
+      const data = localStorage.getItem('routeHistoryStack');
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          this.historyStack = parsed.filter(item => typeof item === 'string');
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao carregar histórico do localStorage:', e);
+      this.historyStack = [];
+    }
   }
 
   logHistory(): void {
